@@ -1,13 +1,13 @@
+#Tahmeed Chowdhury
+
 import argparse
 import socket
 import struct
 
 def dns_query(type, name, server):
-    # Create a UDP socket
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = (server, 53)  
 
-    # Create the DNS query
     ID = 0x1234
     QR = 0
     OPCODE = 0
@@ -23,8 +23,7 @@ def dns_query(type, name, server):
     ARCOUNT = 0
 
     header = struct.pack('!HHHHHH', ID, QR << 15 | OPCODE << 11 | AA << 10 | TC << 9 | RD << 8 | RA << 7 | Z << 4 | RCODE, QDCOUNT, ANCOUNT, NSCOUNT, ARCOUNT)
-
-    qname_parts = name.split('.')  # Split by periods
+    qname_parts = name.split('.') 
     qname_encoded_parts = [struct.pack('B', len(part)) + part.encode('ascii') for part in qname_parts]  
     qname_encoded = b''.join(qname_encoded_parts) + b'\x00' 
 
@@ -33,15 +32,12 @@ def dns_query(type, name, server):
     elif type == 'AAAA':
         qtype = 28  
     else:
-        raise ValueError('Invalid type')
+        raise ValueError('Invalid')
 
-    qclass = 1  # Value for Internet class
-
+    qclass = 1  
     question = qname_encoded + struct.pack('!HH', qtype, qclass)
-
     message = header + question 
     sent = sock.sendto(message, server_address)
-
     data, _ = sock.recvfrom(4096) 
 
     response_header = data[:12]  
@@ -71,7 +67,7 @@ def dns_query(type, name, server):
         name = '.'.join(name_parts)
 
         type, cls, ttl, rdlength = struct.unpack('!HHIH', response_answer[offset:offset+10]) 
-        offset += 10  # Same value as just calculated
+        offset += 10 
 
         rdata = response_answer[offset:offset+rdlength]
         offset += rdlength
